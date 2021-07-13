@@ -1,0 +1,22 @@
+name: LaserMaster
+author: SkytAsul
+version: 1.0
+main: fr.skytasul.lasermaster.LaserMaster
+api-version: 1.17
+
+permissions:
+  lasermover.*:
+    description: Give all LaserMaster permissions
+    children:
+      lasermover.summon: true
+      lasermover.move: true
+      lasermover.end: true
+  lasermover.summon:
+    description: Give access to /summonlaser
+    default: op
+  lasermover.move:
+    description: Give access to /movelaser
+    default: op
+  lasermover.end:
+    description: Give access to /endlaser
+    default: op
