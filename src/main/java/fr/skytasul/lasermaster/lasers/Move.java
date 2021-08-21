@@ -2,4 +2,12 @@ package fr.skytasul.lasermaster.lasers;
 
 import org.bukkit.Location;
 
-public record Move(Location end, int duration) {}
+import fr.skytasul.lasermaster.DefaultVector;
+
+public record Move(Location end, int duration, DefaultVector spread) {
+	
+	public Move(Location end, int duration) {
+		this(end, duration, new DefaultVector());
+	}
+	
+}

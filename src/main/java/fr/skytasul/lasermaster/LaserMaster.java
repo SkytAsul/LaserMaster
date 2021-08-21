@@ -13,19 +13,25 @@ import com.karuslabs.commons.command.dispatcher.Dispatcher;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 
 import fr.skytasul.lasermaster.commands.AbstractLaserCommand;
-import fr.skytasul.lasermaster.commands.EndLaserCommand;
-import fr.skytasul.lasermaster.commands.MoveLaserCommand;
-import fr.skytasul.lasermaster.commands.SummonLaserCommand;
+import fr.skytasul.lasermaster.commands.crystal.EndBeamCommand;
+import fr.skytasul.lasermaster.commands.crystal.MoveBeamCommand;
+import fr.skytasul.lasermaster.commands.crystal.SummonBeamCommand;
+import fr.skytasul.lasermaster.commands.guardian.EndLaserCommand;
+import fr.skytasul.lasermaster.commands.guardian.MoveLaserCommand;
+import fr.skytasul.lasermaster.commands.guardian.SummonLaserCommand;
 import fr.skytasul.lasermaster.lasers.RunningLaserManager;
 
-public class LaserMover extends JavaPlugin implements Listener {
+public class LaserMaster extends JavaPlugin implements Listener {
 	
-	private static LaserMover instance;
+	private static LaserMaster instance;
 	
-	private List<AbstractLaserCommand> commands = Arrays.asList(new SummonLaserCommand(), new MoveLaserCommand(), new EndLaserCommand());
+	private RunningLaserManager guardianLasers = new RunningLaserManager();
+	private RunningLaserManager crystalLasers = new RunningLaserManager();
+	
+	private List<AbstractLaserCommand> commands = Arrays.asList(
+			new SummonLaserCommand("summonlaser", "lasermover.summon", "Summons a new laser.", guardianLasers),
+			new MoveLaserCommand(), new EndLaserCommand(), new SummonBeamCommand(), new MoveBeamCommand(), new EndBeamCommand());
 	private Dispatcher dispatcher;
-	
-	private RunningLaserManager lasersManager = new RunningLaserManager();
 	
 	@Override
 	public void onEnable() {
@@ -47,8 +53,12 @@ public class LaserMover extends JavaPlugin implements Listener {
 		return dispatcher;
 	}
 	
-	public RunningLaserManager getLasersManager() {
-		return lasersManager;
+	public RunningLaserManager getGuardianLasers() {
+		return guardianLasers;
+	}
+	
+	public RunningLaserManager getCrystalLasers() {
+		return crystalLasers;
 	}
 	
 	@EventHandler
@@ -60,12 +70,12 @@ public class LaserMover extends JavaPlugin implements Listener {
 			try {
 				getDispatcher().execute(e.getCommand(), block);
 			}catch (CommandSyntaxException ex) {
-				ex.printStackTrace();
+				block.sendMessage(ex.getMessage());
 			}
 		}
 	}
 	
-	public static LaserMover getInstance() {
+	public static LaserMaster getInstance() {
 		return instance;
 	}
 	

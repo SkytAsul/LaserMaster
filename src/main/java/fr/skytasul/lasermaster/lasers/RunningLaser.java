@@ -12,70 +12,86 @@ import org.bukkit.Location;
 import org.bukkit.util.Vector;
 
 import fr.skytasul.guardianbeam.Laser;
-import fr.skytasul.lasermaster.LaserMover;
+import fr.skytasul.guardianbeam.Laser.LaserType;
+import fr.skytasul.lasermaster.DefaultVector;
+import fr.skytasul.lasermaster.LaserMaster;
 
 public class RunningLaser {
 	
-	private String name;
-	private Vector spread;
+	private final String name;
+	private final Vector originEndSpread;
+	private final Location originEnd;
+	
+	private Vector endSpread;
 	private List<Laser> lasers;
 	
 	private Set<Laser> moving;
+	private RunningLaserManager manager;
 	
-	private RunningLaser(String name, Vector spread, List<Laser> lasers) {
+	private RunningLaser(String name, Vector spread, Location originEnd, List<Laser> lasers) {
 		this.name = name;
-		this.spread = spread;
+		this.originEndSpread = spread;
+		this.endSpread = spread;
+		this.originEnd = originEnd;
 		this.lasers = lasers;
 		
-		moving = new HashSet<>(lasers.size(), 1);
+		moving = new HashSet<>(lasers.size() + 1, 1);
 	}
 	
 	public String getName() {
 		return name;
 	}
 	
-	void start() {
-		lasers.forEach(x -> x.start(LaserMover.getInstance()));
+	void start(RunningLaserManager manager) {
+		this.manager = manager;
+		lasers.forEach(x -> x.start(LaserMaster.getInstance()));
 	}
 	
 	void end() {
 		new ArrayList<>(lasers).forEach(Laser::stop);
 	}
 	
-	public void move(int repeat, LinkedList<Move> moves) {
-		moveInternal((repeat + 1) * moves.size() - 1, moves);
+	public void move(int repeat, LinkedList<Move> moves, int endDuration) {
+		moves.add(new Move(originEnd, endDuration, new DefaultVector(originEndSpread)));
+		moveInternal((repeat + 1) * moves.size() - 1, moves, endDuration);
 	}
 	
-	private void moveInternal(int repeat, LinkedList<Move> moves) {
+	private void moveInternal(int repeat, LinkedList<Move> moves, int endDuration) {
+		/*if (repeat == -1) {
+			moves.clear();
+			moves.add(new Move(originEnd, endDuration, originEndSpread));
+		}else if (repeat == -2) return;*/
 		if (repeat == -1) return;
 		if (moves.isEmpty()) return;
 		Move move = moves.removeFirst();
 		int amountSplit = lasers.size() / 2;
-		Location end = move.end().clone().subtract(spread.clone().multiply(amountSplit));
+		if (move.spread() != null) endSpread = move.spread().toVector(endSpread);
+		Location end = move.end().clone().subtract(endSpread.clone().multiply(amountSplit));
 		for (Iterator<Laser> iterator = lasers.iterator(); iterator.hasNext();) {
 			Laser laser = iterator.next();
 			moving.add(laser);
-			laser.moveEnd(end.add(spread), move.duration(), () -> {
+			laser.moveEnd(end.add(endSpread), move.duration(), () -> {
 				moving.remove(laser);
 				if (moving.isEmpty()) {
 					moves.add(move);
-					moveInternal(repeat - 1, moves);
+					moveInternal(repeat - 1, moves, endDuration);
 				}
 			});
 		}
 	}
 	
-	public static RunningLaser build(String name, Location start, Location end, int amount, Vector spread, int duration) throws ReflectiveOperationException {
+	public static RunningLaser build(LaserType type, String name, Location start, Location end, int amount, Vector startSpread, Vector endSpread, int duration) throws ReflectiveOperationException {
 		List<Laser> lasers = Collections.synchronizedList(new ArrayList<>());
 		int amountSplit = amount / 2;
-		end.subtract(spread.clone().multiply(amountSplit));
+		Location newEnd = end.clone().subtract(endSpread.clone().multiply(amountSplit));
+		Location newStart = start.clone().subtract(startSpread.clone().multiply(amountSplit));
 		for (int i = 0; i < amount; i++) {
-			lasers.add(new Laser(start, end.add(spread).clone(), duration, 100).durationInTicks());
+			lasers.add(type.create(newStart.add(startSpread), newEnd.add(endSpread).clone(), duration, 100).durationInTicks());
 		}
-		RunningLaser runningLaser = new RunningLaser(name, spread, lasers);
+		RunningLaser runningLaser = new RunningLaser(name, endSpread, end, lasers);
 		lasers.forEach(laser -> laser.executeEnd(() -> {
 			lasers.remove(laser);
-			if (lasers.isEmpty()) LaserMover.getInstance().getLasersManager().endLaser(runningLaser);
+			if (lasers.isEmpty()) runningLaser.manager.endLaser(runningLaser);
 		}));
 		return runningLaser;
 	}

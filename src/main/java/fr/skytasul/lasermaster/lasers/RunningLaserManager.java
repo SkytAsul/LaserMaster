@@ -10,7 +10,7 @@ public class RunningLaserManager {
 	
 	public void addLaser(RunningLaser laser) {
 		lasers.add(laser);
-		laser.start();
+		laser.start(this);
 	}
 	
 	public void endLaser(RunningLaser laser) {

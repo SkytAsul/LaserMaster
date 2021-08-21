@@ -1,8 +1,9 @@
-package fr.skytasul.lasermaster.commands;
+package fr.skytasul.lasermaster.commands.crystal;
 
 import java.util.LinkedList;
 import java.util.List;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
@@ -20,58 +21,63 @@ import com.mojang.brigadier.context.CommandContextBuilder;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.CommandNode;
 
-import fr.skytasul.lasermaster.LaserMover;
+import fr.skytasul.lasermaster.DefaultVector;
+import fr.skytasul.lasermaster.DefaultVector3DType;
+import fr.skytasul.lasermaster.LaserMaster;
+import fr.skytasul.lasermaster.commands.AbstractLaserCommand;
 import fr.skytasul.lasermaster.lasers.Move;
 import fr.skytasul.lasermaster.lasers.RunningLaser;
 
-public class MoveLaserCommand extends AbstractLaserCommand {
+public class MoveBeamCommand extends AbstractLaserCommand {
 	
 	private Argument<CommandSender, Point> endArg = Argument.of("end", PointType.CUBIC).build();
+	private Argument<CommandSender, DefaultVector> spreadArg = Argument.of("spread", DefaultVector3DType.DEFAULT_3D_VECTOR).build();
 	private Argument<CommandSender, Integer> durationArg = Argument.of("duration", IntegerArgumentType.integer(1)).build();
 	private Argument<CommandSender, String> otherArg = Argument.of("other", StringArgumentType.greedyString()).build();
 	
 	@Override
 	public CommandNode<CommandSender> computeCommandNode() {
-		return Literal.of("movelaser")
+		return Literal.of("movebeam")
 				.then(Argument.of("name", WordType.WORD).suggests((context, builder) -> {
-					LaserMover.getInstance().getLasersManager().getLasers().stream().map(RunningLaser::getName).filter(x -> x.startsWith(builder.getRemaining())).forEach(builder::suggest);
+					LaserMaster.getInstance().getCrystalLasers().getLasers().stream().map(RunningLaser::getName).filter(x -> x.startsWith(builder.getRemaining())).forEach(builder::suggest);
 					return builder.buildFuture();
 				})
 						.then(Argument.of("repeat", IntegerArgumentType.integer(0))
-								.then(endArg.createBuilder()
-										.then(durationArg.createBuilder()
-												.then(otherArg.createBuilder()
-														.executes(context -> execute(context, true)))
-												.executes(context -> execute(context, false))).build())))
+								.then(Argument.of("endduration", IntegerArgumentType.integer(0))
+										.then(endArg.createBuilder()
+												.then(spreadArg.createBuilder()
+														.then(durationArg.createBuilder()
+																.then(otherArg.createBuilder()
+																		.executes(context -> execute(context, true)))
+																.executes(context -> execute(context, false))).build())))))
 				.requires(x -> x.hasPermission("lasermover.move"))
-				.description("Moves an existing laser.")
+				.description("Moves an existing beam.")
 				.build();
 	}
 	
 	private int execute(CommandContext<CommandSender> context, boolean hasMore) throws CommandSyntaxException {
 		String name = context.getArgument("name", String.class);
-		RunningLaser laser = LaserMover.getInstance().getLasersManager().getLaser(name);
+		RunningLaser laser = LaserMaster.getInstance().getCrystalLasers().getLaser(name);
 		if (laser == null) throw UNKNOWN_LASER.create();
 		World world = getWorld(context.getSource());
-		if (world == null) {
-			context.getSource().sendMessage("§cImpossible from console.");
-			return 0;
-		}
+		if (world == null) world = Bukkit.getWorld("Park");
 		int repeat = IntegerArgumentType.getInteger(context, "repeat");
+		int endDuration = IntegerArgumentType.getInteger(context, "endduration");
 		
 		try {
 			LinkedList<Move> moves = new LinkedList<>();
 			Location end = context.getArgument("end", Point.class);
 			end.setWorld(world);
+			DefaultVector spread = context.getArgument("spread", DefaultVector.class);
 			int duration = IntegerArgumentType.getInteger(context, "duration");
-			moves.add(new Move(end, duration));
+			moves.add(new Move(end, duration, spread));
 			if (hasMore) parseMove(moves, world, context.getSource(), StringArgumentType.getString(context, "other"));
 			try {
-				laser.move(repeat, moves);
-				context.getSource().sendMessage("§7➤ §aLaser \"%s\" successfully moved.".formatted(laser.getName()));
+				laser.move(repeat, moves, endDuration);
+				context.getSource().sendMessage("§7➤ §aBeam \"%s\" successfully moved.".formatted(laser.getName()));
 			}catch (Exception ex) {
 				ex.printStackTrace();
-				context.getSource().sendMessage("§7➤ §cAn error ocurred while moving the laser \"%s\".".formatted(name));
+				context.getSource().sendMessage("§7➤ §cAn error ocurred while moving the beam \"%s\".".formatted(name));
 			}
 		}catch (CommandSyntaxException ex) {
 			context.getSource().sendMessage("§7➤ §cAn error ocurred while parsing moves.");
@@ -85,19 +91,25 @@ public class MoveLaserCommand extends AbstractLaserCommand {
 	
 	private void parseMove(List<Move> moves, World world, CommandSender sender, String more) throws CommandSyntaxException {
 		StringReader reader = new StringReader(more);
-		CommandContextBuilder<CommandSender> contextBuilder = new CommandContextBuilder<>(LaserMover.getInstance().getDispatcher(), sender, endArg, 0);
+		CommandContextBuilder<CommandSender> contextBuilder = new CommandContextBuilder<>(LaserMaster.getInstance().getDispatcher(), sender, endArg, 0);
 		endArg.parse(reader, contextBuilder);
 		CommandContext<CommandSender> context = contextBuilder.build(more);
 		Location end = context.getArgument("end", Point.class);
 		end.setWorld(world);
 		reader.skip();
+		if (!reader.canRead()) throw CommandSyntaxException.BUILT_IN_EXCEPTIONS.readerExpectedSymbol().create("vector");
+		contextBuilder = new CommandContextBuilder<>(LaserMaster.getInstance().getDispatcher(), context.getSource(), spreadArg, 0);
+		spreadArg.parse(reader, contextBuilder);
+		context = contextBuilder.build(reader.getRemaining());
+		DefaultVector spread = context.getArgument("spread", DefaultVector.class);
+		reader.skip();
 		if (!reader.canRead()) throw CommandSyntaxException.BUILT_IN_EXCEPTIONS.readerExpectedInt().create();
-		contextBuilder = new CommandContextBuilder<>(LaserMover.getInstance().getDispatcher(), context.getSource(), durationArg, 0);
+		contextBuilder = new CommandContextBuilder<>(LaserMaster.getInstance().getDispatcher(), context.getSource(), durationArg, 0);
 		durationArg.parse(reader, contextBuilder);
 		context = contextBuilder.build(reader.getRemaining());
 		int duration = IntegerArgumentType.getInteger(context, "duration");
 		reader.skip();
-		moves.add(new Move(end, duration));
+		moves.add(new Move(end, duration, spread));
 		if (reader.getRemainingLength() > 0) {
 			parseMove(moves, world, sender, reader.getRemaining());
 		}
