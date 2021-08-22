@@ -4,9 +4,21 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import fr.skytasul.guardianbeam.Laser.LaserType;
+
 public class RunningLaserManager {
 	
+	private final LaserType laserType;
+	
 	private List<RunningLaser> lasers = Collections.synchronizedList(new ArrayList<>());
+	
+	public RunningLaserManager(LaserType laserType) {
+		this.laserType = laserType;
+	}
+	
+	public LaserType getLaserType() {
+		return laserType;
+	}
 	
 	public void addLaser(RunningLaser laser) {
 		lasers.add(laser);

@@ -12,25 +12,27 @@ import org.bukkit.plugin.java.JavaPlugin;
 import com.karuslabs.commons.command.dispatcher.Dispatcher;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 
+import fr.skytasul.guardianbeam.Laser.LaserType;
 import fr.skytasul.lasermaster.commands.AbstractLaserCommand;
-import fr.skytasul.lasermaster.commands.crystal.EndBeamCommand;
-import fr.skytasul.lasermaster.commands.crystal.MoveBeamCommand;
-import fr.skytasul.lasermaster.commands.crystal.SummonBeamCommand;
-import fr.skytasul.lasermaster.commands.guardian.EndLaserCommand;
-import fr.skytasul.lasermaster.commands.guardian.MoveLaserCommand;
-import fr.skytasul.lasermaster.commands.guardian.SummonLaserCommand;
+import fr.skytasul.lasermaster.commands.EndLaserCommand;
+import fr.skytasul.lasermaster.commands.MoveLaserCommand;
+import fr.skytasul.lasermaster.commands.SummonLaserCommand;
 import fr.skytasul.lasermaster.lasers.RunningLaserManager;
 
 public class LaserMaster extends JavaPlugin implements Listener {
 	
 	private static LaserMaster instance;
 	
-	private RunningLaserManager guardianLasers = new RunningLaserManager();
-	private RunningLaserManager crystalLasers = new RunningLaserManager();
+	private RunningLaserManager guardianLasers = new RunningLaserManager(LaserType.GUARDIAN);
+	private RunningLaserManager crystalLasers = new RunningLaserManager(LaserType.ENDER_CRYSTAL);
 	
 	private List<AbstractLaserCommand> commands = Arrays.asList(
-			new SummonLaserCommand("summonlaser", "lasermover.summon", "Summons a new laser.", guardianLasers),
-			new MoveLaserCommand(), new EndLaserCommand(), new SummonBeamCommand(), new MoveBeamCommand(), new EndBeamCommand());
+			new SummonLaserCommand("summonlaser", "laser", guardianLasers),
+			new SummonLaserCommand("summonbeam", "beam", crystalLasers),
+			new MoveLaserCommand("movelaser", "laser", guardianLasers),
+			new MoveLaserCommand("movebeam", "beam", crystalLasers),
+			new EndLaserCommand("endlaser", "laser", guardianLasers),
+			new EndLaserCommand("endbeam", "beam", crystalLasers));
 	private Dispatcher dispatcher;
 	
 	@Override

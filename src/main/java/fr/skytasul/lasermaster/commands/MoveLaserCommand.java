@@ -1,4 +1,4 @@
-package fr.skytasul.lasermaster.commands.crystal;
+package fr.skytasul.lasermaster.commands;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -9,7 +9,7 @@ import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 
 import com.karuslabs.commons.command.tree.nodes.Argument;
-import com.karuslabs.commons.command.tree.nodes.Literal;
+import com.karuslabs.commons.command.tree.nodes.Literal.Builder;
 import com.karuslabs.commons.command.types.PointType;
 import com.karuslabs.commons.command.types.WordType;
 import com.karuslabs.commons.util.Point;
@@ -24,11 +24,15 @@ import com.mojang.brigadier.tree.CommandNode;
 import fr.skytasul.lasermaster.DefaultVector;
 import fr.skytasul.lasermaster.DefaultVector3DType;
 import fr.skytasul.lasermaster.LaserMaster;
-import fr.skytasul.lasermaster.commands.AbstractLaserCommand;
 import fr.skytasul.lasermaster.lasers.Move;
 import fr.skytasul.lasermaster.lasers.RunningLaser;
+import fr.skytasul.lasermaster.lasers.RunningLaserManager;
 
-public class MoveBeamCommand extends AbstractLaserCommand {
+public class MoveLaserCommand extends AbstractLaserCommand {
+	
+	public MoveLaserCommand(String name, String laserName, RunningLaserManager laserManager) {
+		super(name, laserManager, laserName);
+	}
 	
 	private Argument<CommandSender, Point> endArg = Argument.of("end", PointType.CUBIC).build();
 	private Argument<CommandSender, DefaultVector> spreadArg = Argument.of("spread", DefaultVector3DType.DEFAULT_3D_VECTOR).build();
@@ -36,12 +40,10 @@ public class MoveBeamCommand extends AbstractLaserCommand {
 	private Argument<CommandSender, String> otherArg = Argument.of("other", StringArgumentType.greedyString()).build();
 	
 	@Override
-	public CommandNode<CommandSender> computeCommandNode() {
-		return Literal.of("movebeam")
-				.then(Argument.of("name", WordType.WORD).suggests((context, builder) -> {
-					LaserMaster.getInstance().getCrystalLasers().getLasers().stream().map(RunningLaser::getName).filter(x -> x.startsWith(builder.getRemaining())).forEach(builder::suggest);
-					return builder.buildFuture();
-				})
+	public CommandNode<CommandSender> computeCommandNode(Builder<CommandSender> builder) {
+		return builder
+				.then(Argument.of("name", WordType.WORD)
+						.suggests(super::suggestLaser)
 						.then(Argument.of("repeat", IntegerArgumentType.integer(0))
 								.then(Argument.of("endduration", IntegerArgumentType.integer(0))
 										.then(endArg.createBuilder()
@@ -57,7 +59,7 @@ public class MoveBeamCommand extends AbstractLaserCommand {
 	
 	private int execute(CommandContext<CommandSender> context, boolean hasMore) throws CommandSyntaxException {
 		String name = context.getArgument("name", String.class);
-		RunningLaser laser = LaserMaster.getInstance().getCrystalLasers().getLaser(name);
+		RunningLaser laser = laserManager.getLaser(name);
 		if (laser == null) throw UNKNOWN_LASER.create();
 		World world = getWorld(context.getSource());
 		if (world == null) world = Bukkit.getWorld("Park");

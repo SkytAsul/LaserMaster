@@ -1,4 +1,4 @@
-package fr.skytasul.lasermaster.commands.guardian;
+package fr.skytasul.lasermaster.commands;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -7,7 +7,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.util.Vector;
 
 import com.karuslabs.commons.command.tree.nodes.Argument;
-import com.karuslabs.commons.command.tree.nodes.Literal;
+import com.karuslabs.commons.command.tree.nodes.Literal.Builder;
 import com.karuslabs.commons.command.types.PointType;
 import com.karuslabs.commons.command.types.VectorType;
 import com.karuslabs.commons.command.types.WordType;
@@ -17,19 +17,18 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.CommandNode;
 
-import fr.skytasul.guardianbeam.Laser.LaserType;
-import fr.skytasul.lasermaster.commands.AbstractLaserCommand;
 import fr.skytasul.lasermaster.lasers.RunningLaser;
 import fr.skytasul.lasermaster.lasers.RunningLaserManager;
 
 public class SummonLaserCommand extends AbstractLaserCommand {
 	
-	private RunningLaserManager laserManager;
-	private Literal<CommandSender> node;
+	public SummonLaserCommand(String name, String laserName, RunningLaserManager laserManager) {
+		super(name, laserManager, laserName);
+	}
 	
-	public SummonLaserCommand(String name, String permission, String description, RunningLaserManager laserManager) {
-		this.laserManager = laserManager;
-		this.node = Literal.of(name)
+	@Override
+	public CommandNode<CommandSender> computeCommandNode(Builder<CommandSender> builder) {
+		return builder
 				.then(Argument.of("name", WordType.WORD)
 						.then(Argument.of("start", PointType.CUBIC)
 								.then(Argument.of("end", PointType.CUBIC)
@@ -39,14 +38,9 @@ public class SummonLaserCommand extends AbstractLaserCommand {
 																.then(Argument.of("end-spread", VectorType.CUBIC)
 																		.executes(context -> execute(context, true))))
 														.executes(context -> execute(context, false)))))))
-				.requires(x -> x.hasPermission(permission))
-				.description(description)
+				.requires(x -> x.hasPermission("lasermover.summon"))
+				.description("Summons a new " + laserName)
 				.build();
-	}
-	
-	@Override
-	public CommandNode<CommandSender> computeCommandNode() {
-		return node;
 	}
 	
 	private int execute(CommandContext<CommandSender> context, boolean hasSpread) throws CommandSyntaxException {
@@ -65,11 +59,11 @@ public class SummonLaserCommand extends AbstractLaserCommand {
 		Vector startSpread = hasSpread ? context.getArgument("start-spread", Vector.class) : new Vector();
 		Vector endSpread = hasSpread ? context.getArgument("end-spread", Vector.class) : new Vector();
 		try {
-			laserManager.addLaser(RunningLaser.build(LaserType.GUARDIAN, name, start, end, amount, startSpread, endSpread, duration));
-			context.getSource().sendMessage("§7➤ §a%d lasers started under the name \"%s\".".formatted(amount, name));
+			laserManager.addLaser(RunningLaser.build(laserManager.getLaserType(), name, start, end, amount, startSpread, endSpread, duration));
+			context.getSource().sendMessage("§7➤ §a%d %sss started under the name \"%s\".".formatted(amount, laserName, name));
 		}catch (Exception e) {
 			e.printStackTrace();
-			context.getSource().sendMessage("§7➤ §cAn error ocurred while starting the lasers \"%s\".".formatted(name));
+			context.getSource().sendMessage("§7➤ §cAn error ocurred while starting the %sss \"%s\".".formatted(laserName, name));
 		}
 		return amount;
 	}
