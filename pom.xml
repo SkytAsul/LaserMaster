@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>fr.skytasul</groupId>
 	<artifactId>lasermaster</artifactId>
-	<version>1.0.0</version>
+	<version>2.1.0</version>
 	<name>LaserMaster</name>
 	<description>A Spigot plugin to manage Guardian "lasers"</description>
 
@@ -28,7 +28,7 @@
 		<dependency>
 			<groupId>org.spigotmc</groupId>
 			<artifactId>spigot</artifactId>
-			<version>1.17-R0.1-SNAPSHOT</version>
+			<version>1.18.1-R0.1-SNAPSHOT</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
@@ -40,13 +40,13 @@
 		<dependency>
 			<groupId>com.karuslabs</groupId>
 			<artifactId>commons</artifactId>
-			<version>5.0.0</version>
+			<version>5.2.0</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>fr.skytasul</groupId>
+			<groupId>io.github.skytasul</groupId>
 			<artifactId>guardianbeam</artifactId>
-			<version>2.0.0</version>
+			<version>2.1.0</version>
 			<scope>compile</scope>
 		</dependency>
 	</dependencies>

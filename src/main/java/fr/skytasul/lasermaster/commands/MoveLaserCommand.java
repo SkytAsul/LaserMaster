@@ -42,7 +42,7 @@ public class MoveLaserCommand extends AbstractLaserCommand {
 	@Override
 	public CommandNode<CommandSender> computeCommandNode(Builder<CommandSender> builder) {
 		return builder
-				.then(Argument.of("name", WordType.WORD)
+				.then(Argument.of("name", WordType.word())
 						.suggests(super::suggestLaser)
 						.then(Argument.of("repeat", IntegerArgumentType.integer(0))
 								.then(Argument.of("endduration", IntegerArgumentType.integer(0))

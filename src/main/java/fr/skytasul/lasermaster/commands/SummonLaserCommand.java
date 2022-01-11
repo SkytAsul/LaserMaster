@@ -29,7 +29,7 @@ public class SummonLaserCommand extends AbstractLaserCommand {
 	@Override
 	public CommandNode<CommandSender> computeCommandNode(Builder<CommandSender> builder) {
 		return builder
-				.then(Argument.of("name", WordType.WORD)
+				.then(Argument.of("name", WordType.word())
 						.then(Argument.of("start", PointType.CUBIC)
 								.then(Argument.of("end", PointType.CUBIC)
 										.then(Argument.of("amount", IntegerArgumentType.integer(1))
@@ -60,7 +60,7 @@ public class SummonLaserCommand extends AbstractLaserCommand {
 		Vector endSpread = hasSpread ? context.getArgument("end-spread", Vector.class) : new Vector();
 		try {
 			laserManager.addLaser(RunningLaser.build(laserManager.getLaserType(), name, start, end, amount, startSpread, endSpread, duration));
-			context.getSource().sendMessage("§7➤ §a%d %sss started under the name \"%s\".".formatted(amount, laserName, name));
+			context.getSource().sendMessage("§7➤ §a%d %ss started under the name \"%s\".".formatted(amount, laserName, name));
 		}catch (Exception e) {
 			e.printStackTrace();
 			context.getSource().sendMessage("§7➤ §cAn error ocurred while starting the %sss \"%s\".".formatted(laserName, name));

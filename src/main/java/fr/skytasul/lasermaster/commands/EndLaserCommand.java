@@ -21,7 +21,7 @@ public class EndLaserCommand extends AbstractLaserCommand {
 	@Override
 	public CommandNode<CommandSender> computeCommandNode(Builder<CommandSender> builder) {
 		return builder 
-				.then(Argument.of("name", WordType.WORD)
+				.then(Argument.of("name", WordType.word())
 						.suggests(super::suggestLaser)
 						.executes(this::execute))
 				.requires(x -> x.hasPermission("lasermover.end"))

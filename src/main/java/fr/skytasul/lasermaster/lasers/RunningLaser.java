@@ -86,7 +86,7 @@ public class RunningLaser {
 		Location newEnd = end.clone().subtract(endSpread.clone().multiply(amountSplit));
 		Location newStart = start.clone().subtract(startSpread.clone().multiply(amountSplit));
 		for (int i = 0; i < amount; i++) {
-			lasers.add(type.create(newStart.add(startSpread), newEnd.add(endSpread).clone(), duration, 100).durationInTicks());
+			lasers.add(type.create(newStart.add(startSpread), newEnd.add(endSpread).clone(), duration, 10).durationInTicks());
 		}
 		RunningLaser runningLaser = new RunningLaser(name, endSpread, end, lasers);
 		lasers.forEach(laser -> laser.executeEnd(() -> {

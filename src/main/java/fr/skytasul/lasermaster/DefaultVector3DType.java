@@ -22,7 +22,7 @@ public class DefaultVector3DType extends DynamicExampleType<DefaultVector> {
     static final String[] EMPTY = {};
 	
 	private DefaultVector3DType() {
-		super(List.of("0 0 0", "d d d"));
+		super(List.of("0 0 0", "~ ~ ~"));
 	}
 	
 	@Override
@@ -40,7 +40,7 @@ public class DefaultVector3DType extends DynamicExampleType<DefaultVector> {
             case 0 -> builder.suggest("0")
                              .suggest("0 0")
                              .suggest("0 0 0")
-                             .suggest("d d d");
+					.suggest("~ ~ ~");
             case 1 -> builder.suggest(parts[0] + " 0")
                              .suggest(parts[0] + " 0 0");
 			case 2 -> builder.suggest(parts[0] + " " + parts[1] + " 0");
@@ -69,7 +69,7 @@ public class DefaultVector3DType extends DynamicExampleType<DefaultVector> {
 	}
 	
 	private OptionalInt readDefault(StringReader reader) throws CommandSyntaxException {
-		if (reader.peek() == 'd') {
+		if (reader.peek() == '~') {
 			reader.skip();
 			return OptionalInt.empty();
 		}
