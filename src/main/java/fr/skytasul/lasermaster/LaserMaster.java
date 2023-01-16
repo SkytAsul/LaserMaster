@@ -35,11 +35,16 @@ public class LaserMaster extends JavaPlugin implements Listener {
 			new EndLaserCommand("endbeam", "beam", crystalLasers));
 	private Dispatcher dispatcher;
 	
+	private String defaultWorld;
+	
 	@Override
 	public void onEnable() {
 		instance = this;
 		
 		getServer().getPluginManager().registerEvents(this, this);
+		
+		saveDefaultConfig();
+		defaultWorld = getConfig().getString("defaultWorld");
 		
 		dispatcher = Dispatcher.of(this);
 		commands.forEach(x -> dispatcher.getRoot().addChild(x.getCommandNode()));
@@ -61,6 +66,10 @@ public class LaserMaster extends JavaPlugin implements Listener {
 	
 	public RunningLaserManager getCrystalLasers() {
 		return crystalLasers;
+	}
+	
+	public String getDefaultWorld() {
+		return defaultWorld;
 	}
 	
 	@EventHandler

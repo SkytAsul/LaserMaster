@@ -3,7 +3,6 @@ package fr.skytasul.lasermaster.commands;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
@@ -61,8 +60,7 @@ public class MoveLaserCommand extends AbstractLaserCommand {
 		String name = context.getArgument("name", String.class);
 		RunningLaser laser = laserManager.getLaser(name);
 		if (laser == null) throw UNKNOWN_LASER.create();
-		World world = getWorld(context.getSource());
-		if (world == null) world = Bukkit.getWorld("Park");
+		World world = getWorld(context.getSource(), LaserMaster.getInstance().getDefaultWorld());
 		int repeat = IntegerArgumentType.getInteger(context, "repeat");
 		int endDuration = IntegerArgumentType.getInteger(context, "endduration");
 		

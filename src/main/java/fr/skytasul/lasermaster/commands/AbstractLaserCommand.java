@@ -2,6 +2,7 @@ package fr.skytasul.lasermaster.commands;
 
 import java.util.concurrent.CompletableFuture;
 
+import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.command.BlockCommandSender;
 import org.bukkit.command.CommandSender;
@@ -48,10 +49,10 @@ public abstract class AbstractLaserCommand {
 	
 	public abstract CommandNode<CommandSender> computeCommandNode(Builder<CommandSender> builder);
 	
-	public static World getWorld(CommandSender sender) {
+	public static World getWorld(CommandSender sender, String defaultWorld) {
 		if (sender instanceof BlockCommandSender block) return block.getBlock().getWorld();
 		if (sender instanceof Entity entity) return entity.getWorld();
-		return null;
+		return Bukkit.getWorld(defaultWorld);
 	}
 	
 }

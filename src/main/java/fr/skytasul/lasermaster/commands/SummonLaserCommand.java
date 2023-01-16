@@ -1,6 +1,5 @@
 package fr.skytasul.lasermaster.commands;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
@@ -17,6 +16,7 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.CommandNode;
 
+import fr.skytasul.lasermaster.LaserMaster;
 import fr.skytasul.lasermaster.lasers.RunningLaser;
 import fr.skytasul.lasermaster.lasers.RunningLaserManager;
 
@@ -48,8 +48,7 @@ public class SummonLaserCommand extends AbstractLaserCommand {
 		if (laserManager.getLaser(name) != null) {
 			throw EXISTING_LASER.create();
 		}
-		World world = getWorld(context.getSource());
-		if (world == null) world = Bukkit.getWorld("Park");
+		World world = getWorld(context.getSource(), LaserMaster.getInstance().getDefaultWorld());
 		Location start = context.getArgument("start", Point.class);
 		start.setWorld(world);
 		Location end = context.getArgument("end", Point.class);
